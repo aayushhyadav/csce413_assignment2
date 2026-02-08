@@ -17,12 +17,47 @@ TODO for students:
 8. Add service fingerprinting
 """
 
+import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import socket
 import sys
+import ipaddress
+import json
+
+def results_to_json(results):
+    """
+    Convert scan results into JSON-serializable format.
+    """
+    json_data = {}
+
+    for host, ports in results.items():
+        json_data[host] = {
+            "open_ports": [
+                {
+                    "port": port,
+                    "banner": banner
+                }
+                for port, banner in ports
+            ]
+        }
+
+    return json_data
+
+def expand_targets(target):
+    """
+    Expand a target into a list of IPs.
+    Supports single IP/hostname or CIDR notation.
+    """
+    try:
+        network = ipaddress.ip_network(target, strict=False)
+        # Exclude network and broadcast addresses
+        return [str(ip) for ip in network.hosts()]
+    except ValueError:
+        # Not a CIDR, treat as single host
+        return [target]
 
 
-def scan_port(target, port, timeout=10.0):
+def scan_port(target, port, timeout=2.0):
     """
     Scan a single port on the target host
 
@@ -35,13 +70,7 @@ def scan_port(target, port, timeout=10.0):
         bool: True if port is open, False otherwise
     """
     try:
-        # TODO: Create a socket
-        # TODO: Set timeout
-        # TODO: Try to connect to target:port
-        # TODO: Close the socket
-        # TODO: Return True if connection successful
-
-         # Create a TCP socket
+        # Create a TCP socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(timeout)
 
@@ -59,7 +88,7 @@ def scan_port(target, port, timeout=10.0):
     except (socket.timeout, ConnectionRefusedError, OSError):
         return False
 
-def grab_banner(target, port, timeout=10.0):
+def grab_banner(target, port, timeout=2.0):
     """
     Attempt to grab a service banner from an open port
 
@@ -72,13 +101,11 @@ def grab_banner(target, port, timeout=10.0):
         sock.connect((target, port))
 
         # HTTP-specific probe
-        if port in (80, 8080, 8000, 443):
-            sock.sendall(b"HEAD / HTTP/1.0\r\n\r\n")
-
+        sock.sendall(b"HEAD / HTTP/1.0\r\n\r\n")
         banner = sock.recv(1024)
-        sock.close()
 
         if banner:
+            sock.close()
             return banner.decode(errors="ignore").strip()
 
     except (socket.timeout, OSError):
@@ -86,7 +113,7 @@ def grab_banner(target, port, timeout=10.0):
 
     return None
 
-def scan_range(target, start_port, end_port, threads=100):
+def scan_range(target, start_port, end_port, threads=10):
     """
     Scan a range of ports on the target host
 
@@ -102,74 +129,112 @@ def scan_range(target, start_port, end_port, threads=100):
 
     print(f"[*] Scanning {target} from port {start_port} to {end_port}")
     print(f"[*] This may take a while...")
-
-    # TODO: Implement the scanning logic
-    # Hint: Loop through port range and call scan_port()
-    # Hint: Consider using threading for better performance
-
     print(f"[*] Using {threads} threads")
 
-    with ThreadPoolExecutor(max_workers=threads) as executor:
-        futures = {
-            executor.submit(scan_port, target, port): port
-            for port in range(start_port, end_port + 1)
-        }
+    try:
+        with ThreadPoolExecutor(max_workers=threads) as executor:
+            futures = {
+                executor.submit(scan_port, target, port): port
+                for port in range(start_port, end_port + 1)
+            }
 
-        for future in as_completed(futures):
-            port = futures[future]
-            try:
-                is_open, banner = future.result()
-                if is_open:
-                    print(f"[+] Port {port} is open")
-                    if banner:
-                        print(f"    Banner: {banner.splitlines()[0]}")
-                    open_ports.append((port, banner))
-            except Exception:
-                pass
+            for future in as_completed(futures):
+                port = futures[future]
+                try:
+                    is_open, banner = future.result()
+                    if is_open:
+                        print(f"[+] Port {port} is open")
+                        if banner:
+                            print(f"    Banner: {banner.splitlines()[0]}")
+                        open_ports.append((port, banner))
+                except Exception:
+                    pass
+    except Exception:
+        print('Unexpected error occurred while scanning ', target)
 
     return open_ports
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Port Scanner")
+    parser.add_argument(
+        "--target", required=True,
+        help="Target IP")
+
+    parser.add_argument(
+        "--ports",
+        help="Ports to scan (Can be a single or multiple ports (8080 or 1-10000))",
+    )
+    parser.add_argument(
+        "--threads",
+        type=int,
+        default=10,
+    )
+    parser.add_argument(
+        "--json",
+        help="Write scan results to a JSON file"
+    )
+
+    return parser.parse_args()
 
 def main():
     """Main function"""
-    # TODO: Parse command-line arguments
-    # TODO: Validate inputs
-    # TODO: Call scan_range()
-    # TODO: Display results
 
-    # Example usage (you should improve this):
+    # arguments validation
     if len(sys.argv) < 2:
-        print("Usage: python3 port_scanner_template.py <target> <start_port> <end_port> <threads>")
-        print("Example: python3 port_scanner_template.py 172.20.0.10 1 65535 100")
+        print("Usage: python3 main.py --target <target> --ports <start_port>-<end_port> --threads <threads>")
+        print("Example: python3 main.py --target 172.20.0.10 --ports 1-65535 --threads 100")
         sys.exit(1)
 
-    target = sys.argv[1]
+    args = parse_args()
 
     try:
-        start_port = int(sys.argv[2]) if len(sys.argv) >= 3 else 1
-        end_port = int(sys.argv[3]) if len(sys.argv) >= 4 else 1024
-        threads = int(sys.argv[4]) if len(sys.argv) >= 5 else 100
+        ports = args.ports.split('-') if args.ports else []
+        start_port = int(ports[0]) if len(ports) > 0 else 1
+        end_port = int(ports[1]) if len(ports) > 1 else start_port
+        threads = args.threads
     except ValueError:
         print("Ports must be integers")
         sys.exit(1)
 
-    if start_port < 1 or end_port > 65535 or start_port > end_port:
+    if start_port < 1 or end_port > 65535 or (len(ports) == 2 and start_port > end_port):
         print("Invalid port range")
         sys.exit(1)
 
-    print(f"[*] Starting scan on {target}")
+    targets = expand_targets(args.target)
 
-    open_ports = scan_range(target, start_port, end_port, threads)
+    # Start scanning
+    print(f"[*] Starting scan on {len(targets)} target(s)")
+
+    results = {}
+
+    for target in targets:
+        print(f"\n[*] Scanning host: {target}")
+        open_ports = scan_range(target, start_port, end_port, threads)
+        results[target] = open_ports
 
     print("\n[+] Scan complete")
-    if open_ports:
-        print(f"[+] Open ports found ({len(open_ports)}):")
-        for port, banner in open_ports:
-            print(f"    {port}/tcp")
-            if banner:
-                print(f"        Banner: {banner.splitlines()[0]}")
-    else:
-        print("[-] No open ports found")
+
+    # Print results
+    for target, ports in results.items():
+        print(f"\nHost: {target}")
+        if ports:
+            for port, banner in ports:
+                print(f"    {port}/tcp")
+                if banner:
+                    print(f"        Banner: {banner.splitlines()[0]}")
+        else:
+            print("    No open ports found")
+
+    # Save output in a JSON file
+    if args.json:
+        json_results = results_to_json(results)
+        try:
+            with open(args.json, "w") as f:
+                json.dump(json_results, f, indent=4)
+            print(f"\n[+] JSON results written to {args.json}")
+        except OSError as e:
+            print(f"[-] Failed to write JSON file: {e}")
+
 
 
 if __name__ == "__main__":

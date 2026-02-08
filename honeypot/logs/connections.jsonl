@@ -5,3 +5,17 @@
 {"timestamp": "2026-02-08T03:53:04.517936", "event": "connection", "client_ip": "172.20.0.1", "client_port": 59120}
 {"timestamp": "2026-02-08T04:00:56.658324", "event": "connection", "client_ip": "172.20.0.1", "client_port": 44282}
 {"timestamp": "2026-02-08T04:01:09.446568", "event": "connection", "client_ip": "172.20.0.1", "client_port": 55516}
+{"timestamp": "2026-02-08T20:08:45.127909", "event": "connection", "client_ip": "172.20.0.1", "client_port": 46834}
+{"timestamp": "2026-02-08T20:08:45.130546", "event": "connection", "client_ip": "172.20.0.1", "client_port": 46850}
+{"timestamp": "2026-02-08T20:26:51.407851", "event": "connection", "client_ip": "172.20.0.1", "client_port": 33362}
+{"timestamp": "2026-02-08T20:26:51.411597", "event": "connection", "client_ip": "172.20.0.1", "client_port": 33376}
+{"timestamp": "2026-02-08T21:10:49.378846", "event": "connection", "client_ip": "172.20.0.1", "client_port": 55214}
+{"timestamp": "2026-02-08T21:10:49.385983", "event": "connection", "client_ip": "172.20.0.1", "client_port": 55222}
+{"timestamp": "2026-02-08T21:12:21.382626", "event": "connection", "client_ip": "172.20.0.1", "client_port": 48424}
+{"timestamp": "2026-02-08T21:12:21.392416", "event": "connection", "client_ip": "172.20.0.1", "client_port": 48432}
+{"timestamp": "2026-02-08T21:23:27.152653", "event": "connection", "client_ip": "172.20.0.1", "client_port": 34932}
+{"timestamp": "2026-02-08T21:23:27.170133", "event": "connection", "client_ip": "172.20.0.1", "client_port": 34934}
+{"timestamp": "2026-02-08T21:25:54.605179", "event": "connection", "client_ip": "172.20.0.1", "client_port": 59362}
+{"timestamp": "2026-02-08T21:25:54.610466", "event": "connection", "client_ip": "172.20.0.1", "client_port": 59370}
+{"timestamp": "2026-02-08T21:32:45.087988", "event": "connection", "client_ip": "172.20.0.1", "client_port": 46742}
+{"timestamp": "2026-02-08T21:32:45.092561", "event": "connection", "client_ip": "172.20.0.1", "client_port": 46754}

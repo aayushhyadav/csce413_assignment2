@@ -115,6 +115,21 @@ services:
       vulnerable_network:
         ipv4_address: 172.20.0.40
 
+  # For testing port scanner inside the docker environment
+  # port_scanner:
+  #   container_name: 2_network_port_scanner
+  #   build:
+  #     context: ./port_scanner
+  #     network: host
+  #   dns:
+  #     - 8.8.8.8
+  #     - 1.1.1.1
+  #   cap_add:
+  #     - NET_ADMIN
+  #   networks:
+  #     vulnerable_network:
+  #       ipv4_address: 172.20.0.60
+
 networks:
   vulnerable_network:
     driver: bridge
