@@ -181,8 +181,8 @@ def main():
 
     # arguments validation
     if len(sys.argv) < 2:
-        print("Usage: python3 main.py --target <target> --ports <start_port>-<end_port> --threads <threads>")
-        print("Example: python3 main.py --target 172.20.0.10 --ports 1-65535 --threads 100")
+        print("Usage: python3 main.py --target <target> --ports <start_port>-<end_port> --threads <threads> --json <json file>")
+        print("Example: python3 main.py --target 172.20.0.10 --ports 1-65535 --threads 100 --json scan.json")
         sys.exit(1)
 
     args = parse_args()
