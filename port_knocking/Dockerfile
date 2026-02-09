@@ -15,10 +15,10 @@ RUN useradd -m -s /bin/bash sshuser && \
 
 COPY knock_server.py knock_client.py ./
 
-# Expose SSH on port 2222 (non-standard port - students must discover this)
+# Expose SSH on port 2222
 EXPOSE 2222
 
-# Rejct any incoming packets to port 2222 to protect the SSH server
+# Reject any incoming packets to port 2222 to protect the SSH server
 # Access is only granted after the client sends requests in the correct sequence
 CMD ["/bin/sh", "-c", "\
     iptables -A INPUT -p tcp --dport 2222 -j REJECT --reject-with tcp-reset && \
