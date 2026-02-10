@@ -13,12 +13,16 @@ HOST_KEY_PATH = "/app/host_key"
 LISTEN_HOST = "0.0.0.0"
 LISTEN_PORT = 22 
 
-
+# generates RSA key-pair for the SSH server
 def generate_host_key():
     if not os.path.exists(HOST_KEY_PATH):
         key = paramiko.RSAKey.generate(2048)
         key.write_private_key_file(HOST_KEY_PATH)
 
+'''
+# spawns a fake shell for every <channel, client> pair
+# supports fake command responses for whoami, ls, uname -a, exit, logout
+'''
 def fake_shell(channel, client_ip):
     logger = logging.getLogger("Honeypot")
 
@@ -85,7 +89,7 @@ def fake_shell(channel, client_ip):
 
     channel.close()
 
-
+# creates a fake SSH server for every client
 def handle_client(client, addr, host_key):
     logger = create_logger()
     client_ip, client_port = addr
@@ -109,7 +113,6 @@ def handle_client(client, addr, host_key):
         logger.error(f"SSH error from {client_ip}: {e}")
     finally:
         transport.close()
-
 
 
 def run_honeypot():

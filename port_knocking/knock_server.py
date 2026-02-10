@@ -22,7 +22,7 @@ def setup_logging():
         handlers=[logging.StreamHandler()],
     )
 
-
+# adds a firewall rule to enable access to the protected port
 def open_protected_port(container_ip, port):
     subprocess.run([
         "iptables", "-I", "INPUT",
@@ -34,6 +34,7 @@ def open_protected_port(container_ip, port):
 
     logging.info("Firewall opened to %s:%d", container_ip, port)
 
+# removes the firewall rule to revoke access to the protected port
 def close_protected_port(container_ip, port):
     subprocess.run([
         "iptables", "-D", "INPUT",
@@ -45,7 +46,8 @@ def close_protected_port(container_ip, port):
 
     logging.info("Firewall closed to %s:%d", container_ip, port)
 
-
+# maintains the state of each client by tracking the
+# last knocked port and the time of request
 class KnockTracker:
     def __init__(self, sequence, window):
         self.sequence = sequence
@@ -62,6 +64,7 @@ class KnockTracker:
 
         index, start = self.state[ip]
 
+        # reset state on timeout
         if now - start > self.window:
             del self.state[ip]
             return False

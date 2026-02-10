@@ -1,7 +1,7 @@
-# ssh_server.py
 import paramiko
 import logging
 
+# Fake SSH server implementation
 class FakeSSHServer(paramiko.ServerInterface):
     def __init__(self, client_ip):
         self.client_ip = client_ip
@@ -28,6 +28,8 @@ class FakeSSHServer(paramiko.ServerInterface):
         self.logger.info(f"Shell opened from {self.client_ip}")
         return True
     
+    # handles PTY request
+    # ensuring the fake shell looks legitimate
     def check_channel_pty_request(
         self, channel, term, width, height, pixelwidth, pixelheight, modes
     ):
